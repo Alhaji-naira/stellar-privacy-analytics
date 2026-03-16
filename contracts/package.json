@@ -4,17 +4,18 @@
   "description": "Stellar blockchain smart contracts for privacy-preserving analytics",
   "main": "index.js",
   "scripts": {
-    "build": "stellar contracts build",
-    "deploy:testnet": "stellar contracts deploy --network testnet",
-    "deploy:mainnet": "stellar contracts deploy --network mainnet",
+    "build": "cargo build --target wasm32-unknown-unknown --release",
+    "deploy:testnet": "npm run build && ts-node scripts/deploy.ts testnet",
+    "deploy:mainnet": "npm run build && ts-node scripts/deploy.ts mainnet",
+    "deploy:local": "npm run build && ts-node scripts/deploy.ts standalone",
     "test": "jest",
     "test:watch": "jest --watch",
-    "lint": "eslint src/**/*.ts",
-    "lint:fix": "eslint src/**/*.ts --fix",
+    "lint": "eslint src/**/*.ts test/**/*.ts",
+    "lint:fix": "eslint src/**/*.ts test/**/*.ts --fix",
     "type-check": "tsc --noEmit",
-    "simulate": "stellar contracts simulate",
-    "verify": "stellar contracts verify",
-    "clean": "rimraf dist"
+    "simulate": "soroban contract simulate",
+    "verify": "soroban contract verify",
+    "clean": "cargo clean && rimraf dist"
   },
   "dependencies": {
     "@stellar/stellar-sdk": "^12.0.0",
@@ -31,6 +32,7 @@
     "rimraf": "^5.0.0",
     "soroban-cli": "^1.0.0",
     "ts-jest": "^29.1.0",
+    "ts-node": "^10.9.0",
     "typescript": "^5.1.0"
   },
   "keywords": [
@@ -43,15 +45,15 @@
     "zero-knowledge",
     "differential-privacy"
   ],
-  "author": "Stellar Team",
+  "author": "Connect Boiz",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/your-org/stellar.git",
+    "url": "https://github.com/connect-boiz/stellar-privacy-analytics.git",
     "directory": "contracts"
   },
   "bugs": {
-    "url": "https://github.com/your-org/stellar/issues"
+    "url": "https://github.com/connect-boiz/stellar-privacy-analytics/issues"
   },
-  "homepage": "https://stellar-ecosystem.com"
+  "homepage": "https://github.com/connect-boiz/stellar-privacy-analytics#readme"
 }
