@@ -10,6 +10,8 @@ import { Dashboard } from './pages/Dashboard';
 import { Analytics } from './pages/Analytics';
 import { DataManagement } from './pages/DataManagement';
 import { PrivacySettings } from './pages/PrivacySettings';
+import AuditExplorerPage from './pages/AuditExplorerPage';
+import EncryptedUploadPage from './pages/EncryptedUploadPage';
 import { Login } from './pages/Login';
 import { ProtectedRoute } from './components/ProtectedRoute';
 
@@ -62,6 +64,8 @@ function App() {
                       <Route path="/analytics" element={<Analytics />} />
                       <Route path="/data" element={<DataManagement />} />
                       <Route path="/privacy" element={<PrivacySettings />} />
+                      <Route path="/audit" element={<AuditExplorerPage />} />
+                      <Route path="/upload" element={<EncryptedUploadPage />} />
                       <Route path="/" element={<Navigate to="/dashboard" />} />
                     </Routes>
                   </Layout>

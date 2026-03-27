@@ -16,6 +16,7 @@ import { queryRoutes } from './routes/query';
 import ipfsRoutes from './routes/ipfs';
 import hsmRoutes from './routes/hsm';
 import { mpcRoutes } from './routes/mpc';
+import { auditRoutes } from './routes/audit';
 
 import { errorHandler } from './middleware/errorHandler';
 import { requestLogger } from './middleware/requestLogger';
@@ -25,6 +26,10 @@ import { logger } from './utils/logger';
 
 // Import HSM integration
 import { getHSMIntegration } from './services/hsmIntegration';
+
+// Import workers
+import { StellarTransactionWatcher } from './workers/StellarTransactionWatcher';
+import { privacyBudgetRoutes } from './routes/privacy-budget';
 
 // Load environment variables
 dotenv.config();
@@ -96,6 +101,7 @@ apiRouter.use('/query', queryRoutes);
 apiRouter.use('/ipfs', ipfsRoutes);
 apiRouter.use('/hsm', hsmRoutes);
 apiRouter.use('/mpc', mpcRoutes);
+apiRouter.use('/audit', auditRoutes);
 
 app.use('/api/v1', apiRouter);
 
@@ -144,7 +150,7 @@ process.on('uncaughtException', (error) => {
 const PORT = process.env.API_PORT || 3001;
 const HOST = process.env.API_HOST || 'localhost';
 
-// Initialize HSM integration before starting server
+// Initialize HSM and Stellar Watcher integration before starting server
 async function initializeServices() {
   try {
     const hsmIntegration = getHSMIntegration({
@@ -155,6 +161,20 @@ async function initializeServices() {
 
     await hsmIntegration.initialize();
     logger.info('HSM integration initialized successfully');
+
+    // Initialize Stellar Transaction Watcher
+    const stellarWatcher = new StellarTransactionWatcher(
+      process.env.STELLAR_RPC_URL || 'https://soroban-testnet.stellar.org',
+      process.env.REDIS_URL || 'redis://localhost:6379',
+      process.env.SOROBAN_CONTRACT_ID || 'CC...DEFAULT_CONTRACT_ID',
+      process.env.WEBHOOK_URLS ? process.env.WEBHOOK_URLS.split(',') : []
+    );
+    
+    // Start watcher in background
+    stellarWatcher.start().catch(err => {
+      logger.error('Failed to start Stellar Watcher:', err);
+    });
+
   } catch (error) {
     logger.error('Failed to initialize HSM integration:', error);
     // Continue without HSM for development, but fail in production
@@ -165,6 +185,7 @@ async function initializeServices() {
     }
   }
 }
+
 
 // Start server after services are initialized
 initializeServices().then(() => {
