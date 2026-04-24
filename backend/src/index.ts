@@ -3,9 +3,12 @@ import cors from 'cors';
 import helmet from 'helmet';
 import compression from 'compression';
 import morgan from 'morgan';
-import rateLimit from 'express-rate-limit';
 import dotenv from 'dotenv';
 import { createServer } from 'http';
+
+// Import rate limiting
+import { initializeRedis, getRedisClient } from './config/redis';
+import { createRateLimiter, createPQLRateLimiter, createAdminRateLimiter } from './middleware/rateLimiter';
 
 // Import routes and middleware
 import { authRoutes } from './routes/auth';
@@ -57,17 +60,21 @@ app.use(cors({
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Privacy-Level'],
 }));
 
-// Rate limiting
-const limiter = rateLimit({
-  windowMs: parseInt(process.env.RATE_LIMIT_WINDOW_MS || '900000'), // 15 minutes
-  max: parseInt(process.env.RATE_LIMIT_MAX_REQUESTS || '100'),
-  message: {
-    error: 'Too many requests from this IP, please try again later.',
-  },
-  standardHeaders: true,
-  legacyHeaders: false,
-});
-app.use(limiter);
+// Rate limiting - using advanced distributed rate limiter
+let rateLimiter: any;
+let pqlRateLimiter: any;
+let adminRateLimiter: any;
+
+// Initialize rate limiters after Redis is connected
+async function initializeRateLimiters() {
+  const redisClient = getRedisClient();
+  
+  rateLimiter = createRateLimiter(redisClient);
+  pqlRateLimiter = createPQLRateLimiter(redisClient);
+  adminRateLimiter = createAdminRateLimiter(redisClient);
+  
+  logger.info('Advanced rate limiters initialized with Redis');
+}
 
 // General middleware
 app.use(compression());
@@ -79,6 +86,14 @@ app.use(morgan('combined', { stream: { write: (message) => logger.info(message.t
 app.use(requestLogger);
 app.use(metricsMiddleware);
 app.use(privacyMiddleware);
+
+// Apply advanced rate limiting after authentication middleware
+app.use('/api/v1', async (req, res, next) => {
+  if (rateLimiter) {
+    return rateLimiter.rateLimit()(req, res, next);
+  }
+  next();
+});
 
 // Health check endpoint
 app.get('/health', (req, res) => {
@@ -92,16 +107,18 @@ app.get('/health', (req, res) => {
 
 // API routes
 const apiRouter = express.Router();
-apiRouter.use('/auth', authRoutes);
-apiRouter.use('/analytics', analyticsRoutes);
+
+// Apply specialized rate limiting to different route groups
+apiRouter.use('/auth', authRoutes); // Basic rate limiting applied above
+apiRouter.use('/analytics', pqlRateLimiter ? pqlRateLimiter.queryRateLimit : (req: any, res: any, next: any) => next(), analyticsRoutes);
+apiRouter.use('/query', pqlRateLimiter ? pqlRateLimiter.queryRateLimit : (req: any, res: any, next: any) => next(), queryRoutes);
 apiRouter.use('/data', dataRoutes);
 apiRouter.use('/privacy', privacyRoutes);
 apiRouter.use('/privacy/budget', privacyBudgetRoutes);
-apiRouter.use('/query', queryRoutes);
 apiRouter.use('/ipfs', ipfsRoutes);
 apiRouter.use('/hsm', hsmRoutes);
 apiRouter.use('/mpc', mpcRoutes);
-apiRouter.use('/audit', auditRoutes);
+apiRouter.use('/audit', adminRateLimiter ? adminRateLimiter.rateLimit() : (req: any, res: any, next: any) => next(), auditRoutes);
 
 app.use('/api/v1', apiRouter);
 
@@ -150,9 +167,15 @@ process.on('uncaughtException', (error) => {
 const PORT = process.env.API_PORT || 3001;
 const HOST = process.env.API_HOST || 'localhost';
 
-// Initialize HSM and Stellar Watcher integration before starting server
+// Initialize services before starting server
 async function initializeServices() {
   try {
+    // Initialize Redis first
+    await initializeRedis();
+    
+    // Initialize rate limiters
+    await initializeRateLimiters();
+    
     const hsmIntegration = getHSMIntegration({
       autoInitializeMasterKey: true,
       enableAutoRecovery: false,
