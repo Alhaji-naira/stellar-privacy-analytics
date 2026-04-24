@@ -45,8 +45,6 @@ const uploadSocket = initializeUploadSocket(server);
 // Initialize federated learning WebSocket
 federatedLearning.setSocketIO(uploadSocket);
 
-// Initialize performance service (will be properly injected with pool and redis)
-// initializePerformanceService(new DatabasePerformanceService(pool, redis));
 
 // Security middleware
 app.use(helmet({
