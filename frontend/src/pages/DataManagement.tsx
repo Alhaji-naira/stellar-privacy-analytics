@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Database, Upload, Lock, Eye, Download, Trash2, Search } from 'lucide-react';
+import { FileUpload } from '../components/FileUpload';
 
 export const DataManagement: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -80,23 +81,24 @@ export const DataManagement: React.FC = () => {
       {/* Upload Section */}
       <div className="bg-white rounded-lg shadow p-6">
         <h2 className="text-lg font-semibold text-gray-900 mb-4">Upload New Dataset</h2>
-        <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-gray-400 transition-colors cursor-pointer">
-          <Upload className="mx-auto h-12 w-12 text-gray-400" />
-          <div className="mt-4">
-            <p className="text-lg font-medium text-gray-900">Drop files here or click to upload</p>
-            <p className="text-sm text-gray-600 mt-1">CSV, JSON, or Parquet files up to 10GB</p>
-          </div>
-          <button className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
-            Select Files
-          </button>
-        </div>
+        <FileUpload 
+          maxFileSize={1024 * 1024 * 1024} // 1GB
+          onUploadComplete={(fileName, fileSize) => {
+            // Refresh the dataset list or show success message
+            console.log(`Upload completed: ${fileName} (${fileSize} bytes)`);
+          }}
+        />
         <div className="mt-4 p-4 bg-blue-50 rounded-lg">
           <div className="flex">
             <Lock className="h-5 w-5 text-blue-400 mt-0.5" />
             <div className="ml-3">
-              <h3 className="text-sm font-medium text-blue-800">Automatic Encryption</h3>
+              <h3 className="text-sm font-medium text-blue-800">Enhanced Upload Features</h3>
               <p className="text-sm text-blue-700 mt-1">
-                Your data will be encrypted immediately upon upload using AES-256 encryption.
+                • Chunked uploads for large files up to 1GB<br/>
+                • Real-time progress tracking with speed and time estimates<br/>
+                • Pause/resume functionality for interrupted uploads<br/>
+                • Network quality indicators and automatic retry<br/>
+                • AES-256 encryption immediately upon upload
               </p>
             </div>
           </div>

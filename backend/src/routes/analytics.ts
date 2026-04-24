@@ -1,10 +1,10 @@
-import { Router } from 'express';
+import { Router, Request, Response } from 'express';
 import { asyncHandler } from '../middleware/errorHandler';
 
 const router = Router();
 
 // Get all analyses
-router.get('/', asyncHandler(async (req, res) => {
+router.get('/', asyncHandler(async (req: Request, res: Response) => {
   res.json({
     analyses: [],
     message: 'X-Ray analyses retrieved successfully'
@@ -12,7 +12,7 @@ router.get('/', asyncHandler(async (req, res) => {
 }));
 
 // Create new analysis
-router.post('/', asyncHandler(async (req, res) => {
+router.post('/', asyncHandler(async (req: Request, res: Response) => {
   res.status(201).json({
     analysisId: 'temp-analysis-id',
     status: 'pending',
@@ -21,7 +21,7 @@ router.post('/', asyncHandler(async (req, res) => {
 }));
 
 // Get analysis by ID
-router.get('/:id', asyncHandler(async (req, res) => {
+router.get('/:id', asyncHandler(async (req: Request, res: Response) => {
   res.json({
     analysis: {
       id: req.params.id,
@@ -32,7 +32,7 @@ router.get('/:id', asyncHandler(async (req, res) => {
 }));
 
 // Run analysis
-router.post('/:id/run', asyncHandler(async (req, res) => {
+router.post('/:id/run', asyncHandler(async (req: Request, res: Response) => {
   res.json({
     message: 'X-Ray analysis started',
     jobId: 'temp-job-id'

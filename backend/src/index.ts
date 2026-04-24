@@ -10,7 +10,7 @@ import { createServer } from 'http';
 // Import routes and middleware
 import { authRoutes } from './routes/auth';
 import { analyticsRoutes } from './routes/analytics';
-import { dataRoutes } from './routes/data';
+import { dataRoutes, initializeUploadSocket } from './routes/data';
 import { privacyRoutes } from './routes/privacy';
 import { errorHandler } from './middleware/errorHandler';
 import { requestLogger } from './middleware/requestLogger';
@@ -23,6 +23,9 @@ dotenv.config();
 
 const app = express();
 const server = createServer(app);
+
+// Initialize WebSocket for upload progress
+const uploadSocket = initializeUploadSocket(server);
 
 // Security middleware
 app.use(helmet({

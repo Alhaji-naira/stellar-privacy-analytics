@@ -1,10 +1,10 @@
-import { Router } from 'express';
+import { Router, Request, Response } from 'express';
 import { asyncHandler } from '../middleware/errorHandler';
 
 const router = Router();
 
 // Get privacy settings
-router.get('/settings', asyncHandler(async (req, res) => {
+router.get('/settings', asyncHandler(async (req: Request, res: Response) => {
   res.json({
     settings: {
       level: 'high',
@@ -15,14 +15,14 @@ router.get('/settings', asyncHandler(async (req, res) => {
 }));
 
 // Update privacy settings
-router.put('/settings', asyncHandler(async (req, res) => {
+router.put('/settings', asyncHandler(async (req: Request, res: Response) => {
   res.json({
     message: 'Privacy settings updated successfully'
   });
 }));
 
 // Get privacy audit logs
-router.get('/audit', asyncHandler(async (req, res) => {
+router.get('/audit', asyncHandler(async (req: Request, res: Response) => {
   res.json({
     logs: [],
     message: 'Privacy audit logs retrieved successfully'
@@ -30,7 +30,7 @@ router.get('/audit', asyncHandler(async (req, res) => {
 }));
 
 // Get consent records
-router.get('/consent', asyncHandler(async (req, res) => {
+router.get('/consent', asyncHandler(async (req: Request, res: Response) => {
   res.json({
     consents: [],
     message: 'Consent records retrieved successfully'
@@ -38,7 +38,7 @@ router.get('/consent', asyncHandler(async (req, res) => {
 }));
 
 // Update consent
-router.post('/consent', asyncHandler(async (req, res) => {
+router.post('/consent', asyncHandler(async (req: Request, res: Response) => {
   res.status(201).json({
     consentId: 'temp-consent-id',
     message: 'Consent updated successfully'
