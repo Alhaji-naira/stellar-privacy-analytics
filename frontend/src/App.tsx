@@ -11,6 +11,7 @@ import { Analytics } from './pages/Analytics';
 import { DataManagement } from './pages/DataManagement';
 import { PrivacySettings } from './pages/PrivacySettings';
 import { PrivacyMLDashboard } from './components/PrivacyMLDashboard';
+import { DataAnonymization } from './components/DataAnonymization';
 import { Login } from './pages/Login';
 import { ProtectedRoute } from './components/ProtectedRoute';
 
@@ -64,6 +65,7 @@ function App() {
                       <Route path="/data" element={<DataManagement />} />
                       <Route path="/privacy" element={<PrivacySettings />} />
                       <Route path="/ml" element={<PrivacyMLDashboard />} />
+                      <Route path="/anonymize" element={<DataAnonymization />} />
                       <Route path="/" element={<Navigate to="/dashboard" />} />
                     </Routes>
                   </Layout>

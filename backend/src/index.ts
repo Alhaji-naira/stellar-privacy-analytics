@@ -13,6 +13,7 @@ import { analyticsRoutes } from './routes/analytics';
 import { dataRoutes, initializeUploadSocket } from './routes/data';
 import { privacyRoutes } from './routes/privacy';
 import { mlRoutes, federatedLearning } from './routes/ml';
+import { anonymizationRoutes } from './routes/anonymization';
 import { errorHandler } from './middleware/errorHandler';
 import { requestLogger } from './middleware/requestLogger';
 import { privacyMiddleware } from './middleware/privacy';
@@ -91,6 +92,7 @@ apiRouter.use('/analytics', analyticsRoutes);
 apiRouter.use('/data', dataRoutes);
 apiRouter.use('/privacy', privacyRoutes);
 apiRouter.use('/ml', mlRoutes);
+apiRouter.use('/anonymization', anonymizationRoutes);
 
 app.use('/api/v1', apiRouter);
 
