@@ -12,6 +12,7 @@ import { DataManagement } from './pages/DataManagement';
 import { PrivacySettings } from './pages/PrivacySettings';
 import { PrivacyMLDashboard } from './components/PrivacyMLDashboard';
 import { DataAnonymization } from './components/DataAnonymization';
+import { DatabasePerformance } from './components/DatabasePerformance';
 import { Login } from './pages/Login';
 import { ProtectedRoute } from './components/ProtectedRoute';
 
@@ -66,6 +67,7 @@ function App() {
                       <Route path="/privacy" element={<PrivacySettings />} />
                       <Route path="/ml" element={<PrivacyMLDashboard />} />
                       <Route path="/anonymize" element={<DataAnonymization />} />
+                      <Route path="/performance" element={<DatabasePerformance />} />
                       <Route path="/" element={<Navigate to="/dashboard" />} />
                     </Routes>
                   </Layout>

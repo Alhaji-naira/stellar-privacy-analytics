@@ -14,6 +14,7 @@ import { dataRoutes, initializeUploadSocket } from './routes/data';
 import { privacyRoutes } from './routes/privacy';
 import { mlRoutes, federatedLearning } from './routes/ml';
 import { anonymizationRoutes } from './routes/anonymization';
+import { performanceRoutes, initializePerformanceService } from './routes/performance';
 import { errorHandler } from './middleware/errorHandler';
 import { requestLogger } from './middleware/requestLogger';
 import { privacyMiddleware } from './middleware/privacy';
@@ -31,6 +32,9 @@ const uploadSocket = initializeUploadSocket(server);
 
 // Initialize federated learning WebSocket
 federatedLearning.setSocketIO(uploadSocket);
+
+// Initialize performance service (will be properly injected with pool and redis)
+// initializePerformanceService(new DatabasePerformanceService(pool, redis));
 
 // Security middleware
 app.use(helmet({
@@ -93,6 +97,7 @@ apiRouter.use('/data', dataRoutes);
 apiRouter.use('/privacy', privacyRoutes);
 apiRouter.use('/ml', mlRoutes);
 apiRouter.use('/anonymization', anonymizationRoutes);
+apiRouter.use('/performance', performanceRoutes);
 
 app.use('/api/v1', apiRouter);
 
