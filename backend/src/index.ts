@@ -22,22 +22,29 @@ import ipfsRoutes from './routes/ipfs';
 import hsmRoutes from './routes/hsm';
 import { mpcRoutes } from './routes/mpc';
 import { auditRoutes } from './routes/audit';
+import { privacyNoiseRoutes } from './routes/privacy-noise';
+import { zkpRoutes } from './routes/zkp';
 
 import { errorHandler } from './middleware/errorHandler';
 import { requestLogger } from './middleware/requestLogger';
 import { privacyMiddleware } from './middleware/privacy';
 import { metricsMiddleware } from './middleware/metrics';
+import { corsMonitor, corsErrorHandler } from './middleware/corsMonitor';
 import { logger } from './utils/logger';
 
-// Import HSM integration
+// Import services
 import { getHSMIntegration } from './services/hsmIntegration';
+import { MemoryMonitorService } from './services/memoryMonitorService';
 
 // Import workers
 import { StellarTransactionWatcher } from './workers/StellarTransactionWatcher';
 import { privacyBudgetRoutes } from './routes/privacy-budget';
-import { gatewayRoutes } from './routes/gateway';
 import { createGateway, startGateway } from './gateway';
 import { trainingRoutes } from './routes/training';
+import { DatabaseService } from './services/databaseService';
+import { PrivacyBudgetService } from './services/privacyBudgetService';
+import { PrivacyBudgetRepository } from './repositories/privacyBudgetRepository';
+import { StorageService } from './services/storageService';
 
 // Load environment variables
 dotenv.config();
@@ -61,12 +68,36 @@ app.use(helmet({
   },
 }));
 
+// CORS monitoring
+app.use(corsMonitor);
+
 // CORS configuration
+const allowedOrigins = process.env.CORS_ORIGINS ? process.env.CORS_ORIGINS.split(',') : ['http://localhost:3000', 'http://localhost:3001'];
+
 app.use(cors({
-  origin: process.env.CORS_ORIGIN || 'http://localhost:3000',
+  origin: (origin, callback) => {
+    // Allow requests with no origin (like mobile apps or curl requests)
+    if (!origin) return callback(null, true);
+    if (allowedOrigins.indexOf(origin) !== -1 || process.env.NODE_ENV === 'development') {
+      callback(null, true);
+    } else {
+      logger.warn(`CORS blocked request from origin: ${origin}`);
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
   credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-Privacy-Level'],
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
+  allowedHeaders: [
+    'Content-Type', 
+    'Authorization', 
+    'X-Privacy-Level', 
+    'X-Requested-With', 
+    'Accept', 
+    'X-Request-Id',
+    'X-Client-Version'
+  ],
+  exposedHeaders: ['X-Total-Count', 'X-Session-Id'],
+  maxAge: 86400, // 24 hours
 }));
 
 // Rate limiting - using enhanced distributed rate limiter
@@ -79,6 +110,8 @@ let enhancedRateLimiter: any;
 async function initializeRateLimiters() {
   const redisClient = getRedisClient();
 
+  const redisClient = getRedisClient() as any;
+  
   // Create standard rate limiters
   rateLimiter = createRateLimiter(redisClient);
   pqlRateLimiter = createPQLRateLimiter(redisClient);
@@ -94,6 +127,11 @@ async function initializeRateLimiters() {
   rateLimitMonitor.registerRateLimiter('admin', adminRateLimiter);
 
   logger.info('Enhanced rate limiters initialized with Redis and monitoring');
+  
+  // Update stellarAuth with redis
+  (stellarAuth as any).redis = redisClient;
+
+  logger.info('Enhanced rate limiters and Auth initialized with Redis and monitoring');
 }
 
 // General middleware
@@ -223,6 +261,8 @@ apiRouter.use('/ipfs', ipfsRoutes);
 apiRouter.use('/hsm', hsmRoutes);
 apiRouter.use('/mpc', mpcRoutes);
 apiRouter.use('/training', trainingRoutes);
+apiRouter.use('/privacy/noise', privacyNoiseRoutes);
+apiRouter.use('/zkp', zkpRoutes);
 
 
 app.use('/api/v1', apiRouter);
@@ -237,6 +277,7 @@ app.use('*', (req, res) => {
 });
 
 // Error handling middleware
+app.use(corsErrorHandler);
 app.use(errorHandler);
 
 // Graceful shutdown
@@ -290,7 +331,28 @@ async function initializeServices() {
     await hsmIntegration.initialize();
     logger.info('HSM integration initialized successfully');
 
-    // Initialize Stellar Transaction Watcher
+    // Initialize Database Service
+    const dbService = new DatabaseService({
+      host: process.env.DB_HOST || 'localhost',
+      port: parseInt(process.env.DB_PORT || '5432'),
+      database: process.env.DB_NAME || 'stellar_privacy',
+      user: process.env.DB_USER || 'postgres',
+      password: process.env.DB_PASSWORD || 'postgres',
+      max: 100, // High concurrency
+    });
+    await dbService.healthCheck();
+    logger.info('Database Service initialized');
+
+    // Initialize Privacy Budget Service
+    const budgetRepo = new PrivacyBudgetRepository(dbService);
+    const budgetService = new PrivacyBudgetService(budgetRepo);
+    app.set('budgetService', budgetService);
+
+    // Initialize Storage Service
+    const storageService = new StorageService(process.env.STORAGE_MASTER_KEY || 'default-master-key-32-chars-long!!!');
+    app.set('storageService', storageService);
+
+    // Start Stellar Transaction Watcher
     const stellarWatcher = new StellarTransactionWatcher(
       process.env.STELLAR_RPC_URL || 'https://soroban-testnet.stellar.org',
       process.env.REDIS_URL || 'redis://localhost:6379',
@@ -298,6 +360,11 @@ async function initializeServices() {
       process.env.WEBHOOK_URLS ? process.env.WEBHOOK_URLS.split(',') : []
     );
 
+    
+    // Start memory monitoring
+    const memoryMonitor = new MemoryMonitorService();
+    memoryMonitor.startMonitoring(10000); // Every 10 seconds
+    
     // Start watcher in background
     stellarWatcher.start().catch(err => {
       logger.error('Failed to start Stellar Watcher:', err);
