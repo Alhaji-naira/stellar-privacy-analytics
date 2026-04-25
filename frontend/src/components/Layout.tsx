@@ -13,7 +13,8 @@ import {
   Activity,
   Search,
   Users,
-  Sliders
+  Sliders,
+  Target
 } from 'lucide-react';
 
 export const Layout: React.FC<{ children?: React.ReactNode }> = ({ children }) => {
@@ -23,6 +24,7 @@ export const Layout: React.FC<{ children?: React.ReactNode }> = ({ children }) =
   const navigation = [
     { name: 'Dashboard', href: '/dashboard', icon: BarChart3 },
     { name: 'X-Ray Analytics', href: '/analytics', icon: Activity },
+    { name: 'Workflow Builder', href: '/workflow', icon: Target },
     { name: 'Data Management', href: '/data', icon: Database },
     { name: 'Privacy Settings', href: '/privacy', icon: Shield },
     { name: 'Search', href: '/search', icon: Search },

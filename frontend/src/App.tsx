@@ -14,6 +14,7 @@ import AuditExplorerPage from './pages/AuditExplorerPage';
 import EncryptedUploadPage from './pages/EncryptedUploadPage';
 import { Login } from './pages/Login';
 import { ProtectedRoute } from './components/ProtectedRoute';
+import { WorkflowBuilder } from './pages/WorkflowBuilder';
 
 // New pages
 import SearchPage from './pages/SearchPage';
@@ -76,6 +77,7 @@ function App() {
                       <Route path="/consent" element={<ConsentPage />} />
                       <Route path="/performance" element={<PerformancePage />} />
                       <Route path="/budget" element={<PrivacyBudgetPage />} />
+                      <Route path="/workflow" element={<WorkflowBuilder />} />
                       <Route path="/" element={<Navigate to="/dashboard" />} />
                     </Routes>
                   </Layout>
