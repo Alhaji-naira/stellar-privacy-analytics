@@ -40,6 +40,7 @@ import { MemoryMonitorService } from './services/memoryMonitorService';
 import { StellarTransactionWatcher } from './workers/StellarTransactionWatcher';
 import { privacyBudgetRoutes } from './routes/privacy-budget';
 import { createGateway, startGateway } from './gateway';
+import { trainingRoutes } from './routes/training';
 import { DatabaseService } from './services/databaseService';
 import { PrivacyBudgetService } from './services/privacyBudgetService';
 import { PrivacyBudgetRepository } from './repositories/privacyBudgetRepository';
@@ -107,21 +108,25 @@ let enhancedRateLimiter: any;
 
 // Initialize rate limiters after Redis is connected
 async function initializeRateLimiters() {
+  const redisClient = getRedisClient();
+
   const redisClient = getRedisClient() as any;
   
   // Create standard rate limiters
   rateLimiter = createRateLimiter(redisClient);
   pqlRateLimiter = createPQLRateLimiter(redisClient);
   adminRateLimiter = createAdminRateLimiter(redisClient);
-  
+
   // Create enhanced rate limiter with advanced features
   enhancedRateLimiter = createEnhancedRateLimiter(redisClient);
-  
+
   // Register rate limiters with monitoring
   rateLimitMonitor.registerRateLimiter('standard', rateLimiter);
   rateLimitMonitor.registerRateLimiter('enhanced', enhancedRateLimiter);
   rateLimitMonitor.registerRateLimiter('pql', pqlRateLimiter);
   rateLimitMonitor.registerRateLimiter('admin', adminRateLimiter);
+
+  logger.info('Enhanced rate limiters initialized with Redis and monitoring');
   
   // Update stellarAuth with redis
   (stellarAuth as any).redis = redisClient;
@@ -162,7 +167,7 @@ app.get('/api/v1/admin/rate-limit/metrics', (req, res) => {
   if (process.env.NODE_ENV === 'production' && !req.user?.isAdmin) {
     return res.status(403).json({ error: 'Admin access required' });
   }
-  
+
   const metrics = rateLimitMonitor.getMetricsSummary();
   res.json({
     metrics,
@@ -176,7 +181,7 @@ app.get('/api/v1/admin/rate-limit/config', (req, res) => {
   if (process.env.NODE_ENV === 'production' && !req.user?.isAdmin) {
     return res.status(403).json({ error: 'Admin access required' });
   }
-  
+
   res.json({
     config: {
       standard: {
@@ -204,7 +209,7 @@ app.get('/api/v1/admin/rate-limit/config', (req, res) => {
 // Health check endpoint
 app.get('/health', (req, res) => {
   const metrics = rateLimitMonitor.getMetricsSummary();
-  
+
   res.status(200).json({
     status: 'healthy',
     timestamp: new Date().toISOString(),
@@ -255,6 +260,7 @@ apiRouter.use('/privacy/budget', privacyBudgetRoutes);
 apiRouter.use('/ipfs', ipfsRoutes);
 apiRouter.use('/hsm', hsmRoutes);
 apiRouter.use('/mpc', mpcRoutes);
+apiRouter.use('/training', trainingRoutes);
 apiRouter.use('/privacy/noise', privacyNoiseRoutes);
 apiRouter.use('/zkp', zkpRoutes);
 
@@ -312,10 +318,10 @@ async function initializeServices() {
   try {
     // Initialize Redis first
     await initializeRedis();
-    
+
     // Initialize rate limiters
     await initializeRateLimiters();
-    
+
     const hsmIntegration = getHSMIntegration({
       autoInitializeMasterKey: true,
       enableAutoRecovery: false,
@@ -353,6 +359,7 @@ async function initializeServices() {
       process.env.SOROBAN_CONTRACT_ID || 'CC...DEFAULT_CONTRACT_ID',
       process.env.WEBHOOK_URLS ? process.env.WEBHOOK_URLS.split(',') : []
     );
+
     
     // Start memory monitoring
     const memoryMonitor = new MemoryMonitorService();
@@ -382,7 +389,7 @@ initializeServices().then(async () => {
     logger.info(`📊 Metrics available on port ${process.env.METRICS_PORT || 9090}`);
     logger.info(`🔒 Privacy-first mode: ${process.env.PRIVACY_MODE || 'enabled'}`);
     logger.info(`🔐 HSM integration: ${getHSMIntegration().isInitialized() ? 'enabled' : 'disabled'}`);
-    
+
     // Start Privacy API Gateway if enabled
     if (process.env.GATEWAY_ENABLED !== 'false') {
       const gatewayPort = parseInt(process.env.GATEWAY_PORT || '8080');

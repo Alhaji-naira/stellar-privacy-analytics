@@ -1,20 +1,20 @@
 import React, { useState } from 'react';
 import { Outlet, Link, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { 
-  BarChart3, 
-  Database, 
-  Shield, 
-  Settings, 
-  Menu, 
-  X, 
+import {
+  BarChart3,
+  Database,
+  Shield,
+  Settings,
+  Menu,
+  X,
   Lock,
   Eye,
   Activity,
   Search,
   Users,
   Sliders,
-  Target
+  GraduationCap
 } from 'lucide-react';
 import { NetworkStatusIndicator } from './NetworkStatusIndicator';
 
@@ -31,8 +31,7 @@ export const Layout: React.FC<{ children?: React.ReactNode }> = ({ children }) =
     { name: 'Search', href: '/search', icon: Search },
     { name: 'Consent', href: '/consent', icon: Users },
     { name: 'Performance', href: '/performance', icon: Sliders },
-    { name: 'Education', href: '/education', icon: BookOpen },
-    { name: 'Data Table', href: '/data-table', icon: Table },
+    { name: 'Training', href: '/training', icon: GraduationCap },
   ];
 
   const isActive = (href: string) => location.pathname === href;
@@ -64,11 +63,10 @@ export const Layout: React.FC<{ children?: React.ReactNode }> = ({ children }) =
                   <Link
                     key={item.name}
                     to={item.href}
-                    className={`group flex items-center px-2 py-2 text-sm font-medium rounded-md transition-colors ${
-                      isActive(item.href)
-                        ? 'bg-blue-100 text-blue-900'
-                        : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
-                    }`}
+                    className={`group flex items-center px-2 py-2 text-sm font-medium rounded-md transition-colors ${isActive(item.href)
+                      ? 'bg-blue-100 text-blue-900'
+                      : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                      }`}
                     onClick={() => setSidebarOpen(false)}
                   >
                     <Icon className="mr-3 h-5 w-5" />
@@ -98,11 +96,10 @@ export const Layout: React.FC<{ children?: React.ReactNode }> = ({ children }) =
                     <Link
                       key={item.name}
                       to={item.href}
-                      className={`group flex items-center px-2 py-2 text-sm font-medium rounded-md transition-colors ${
-                        isActive(item.href)
-                          ? 'bg-blue-100 text-blue-900'
-                          : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
-                      }`}
+                      className={`group flex items-center px-2 py-2 text-sm font-medium rounded-md transition-colors ${isActive(item.href)
+                        ? 'bg-blue-100 text-blue-900'
+                        : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                        }`}
                     >
                       <Icon className="mr-3 h-5 w-5" />
                       {item.name}

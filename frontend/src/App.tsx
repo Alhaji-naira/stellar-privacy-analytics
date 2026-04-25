@@ -6,6 +6,7 @@ import { motion } from 'framer-motion';
 
 // Components
 import { Layout } from './components/Layout';
+import { ModalProvider } from './components/ui/Modal';
 import { Dashboard } from './pages/Dashboard';
 import { Analytics } from './pages/Analytics';
 import { DataManagement } from './pages/DataManagement';
@@ -24,6 +25,12 @@ import PrivacyBudgetPage from './pages/PrivacyBudgetPage';
 import { NetworkTestPage } from './pages/NetworkTestPage';
 import { PrivacyEducation } from './pages/PrivacyEducation';
 import DataTableDemo from './pages/DataTableDemo';
+
+// Training pages
+import TrainingPage from './pages/TrainingPage';
+import TrainingModulePage from './pages/TrainingModulePage';
+import TrainingAdminPage from './pages/TrainingAdminPage';
+import OnboardingPage from './pages/OnboardingPage';
 
 // Hooks
 import { useAuth } from './hooks/useAuth';
@@ -83,38 +90,69 @@ function App() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <Router>
-        <div className="min-h-screen bg-gray-50">
-          <Routes>
-            <Route 
-              path="/login" 
-              element={!isAuthenticated ? <Login /> : <Navigate to="/dashboard" />} 
-            />
-            <Route
-              path="/*"
-              element={
-                <ProtectedRoute isAuthenticated={isAuthenticated}>
-                  <Layout>
-                    <Routes>
-                      <Route path="/dashboard" element={<Dashboard />} />
-                      <Route path="/analytics" element={<Analytics />} />
-                      <Route path="/data" element={<DataManagement />} />
-                      <Route path="/privacy" element={<PrivacySettings />} />
-                      <Route path="/audit" element={<AuditExplorerPage />} />
-                      <Route path="/upload" element={<EncryptedUploadPage />} />
-                      <Route path="/search" element={<SearchPage />} />
-                      <Route path="/consent" element={<ConsentPage />} />
-                      <Route path="/performance" element={<PerformancePage />} />
-                      <Route path="/budget" element={<PrivacyBudgetPage />} />
-                      <Route path="/workflow" element={<WorkflowBuilder />} />
-                      <Route path="/" element={<Navigate to="/dashboard" />} />
-                    </Routes>
-                  </Layout>
-                </ProtectedRoute>
-              }
+      <ModalProvider>
+        <Router>
+          <div className="min-h-screen bg-gray-50">
+            <Routes>
+              <Route
+                path="/login"
+                element={!isAuthenticated ? <Login /> : <Navigate to="/dashboard" />}
+    <ErrorBoundary>
+      <QueryClientProvider client={queryClient}>
+        <Router>
+          <div className="min-h-screen bg-gray-50">
+            {/* Network Status Indicator */}
+            <div className="fixed top-4 right-4 z-50">
+              <NetworkStatusIndicator />
+            </div>
+            
+            <Routes>
+              <Route 
+                path="/login" 
+                element={!isAuthenticated ? <Login /> : <Navigate to="/dashboard" />} 
+              />
+              <Route
+                path="/*"
+                element={
+                  <ProtectedRoute isAuthenticated={isAuthenticated}>
+                    <Layout>
+                      <Routes>
+                        <Route path="/dashboard" element={<Dashboard />} />
+                        <Route path="/analytics" element={<Analytics />} />
+                        <Route path="/data" element={<DataManagement />} />
+                        <Route path="/privacy" element={<PrivacySettings />} />
+                        <Route path="/audit" element={<AuditExplorerPage />} />
+                        <Route path="/upload" element={<EncryptedUploadPage />} />
+                        <Route path="/search" element={<SearchPage />} />
+                        <Route path="/consent" element={<ConsentPage />} />
+                        <Route path="/performance" element={<PerformancePage />} />
+                        <Route path="/budget" element={<PrivacyBudgetPage />} />
+                        <Route path="/training" element={<TrainingPage />} />
+                        <Route path="/training/module/:moduleId" element={<TrainingModulePage />} />
+                        <Route path="/training/admin" element={<TrainingAdminPage />} />
+                        <Route path="/onboarding" element={<OnboardingPage />} />
+                        <Route path="/network-test" element={<NetworkTestPage />} />
+                        <Route path="/" element={<Navigate to="/dashboard" />} />
+                      </Routes>
+                    </Layout>
+                  </ProtectedRoute>
+                }
+              />
+            </Routes>
+            <Toaster
+              position="top-right"
+              toastOptions={{
+                duration: 4000,
+                style: {
+                  background: '#363636',
+                  color: '#fff',
+                },
+              }}
             />
           </div>
         </Router>
+      </ModalProvider>
+    </QueryClientProvider>
       </QueryClientProvider>
     </ErrorBoundary>
   );
