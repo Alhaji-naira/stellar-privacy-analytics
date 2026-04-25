@@ -10,8 +10,12 @@ import {
   X, 
   Lock,
   Eye,
-  Activity
+  Activity,
+  Search,
+  Users,
+  Sliders
 } from 'lucide-react';
+import { NetworkStatusIndicator } from './NetworkStatusIndicator';
 
 export const Layout: React.FC<{ children?: React.ReactNode }> = ({ children }) => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -22,6 +26,9 @@ export const Layout: React.FC<{ children?: React.ReactNode }> = ({ children }) =
     { name: 'X-Ray Analytics', href: '/analytics', icon: Activity },
     { name: 'Data Management', href: '/data', icon: Database },
     { name: 'Privacy Settings', href: '/privacy', icon: Shield },
+    { name: 'Search', href: '/search', icon: Search },
+    { name: 'Consent', href: '/consent', icon: Users },
+    { name: 'Performance', href: '/performance', icon: Sliders },
   ];
 
   const isActive = (href: string) => location.pathname === href;
@@ -109,6 +116,9 @@ export const Layout: React.FC<{ children?: React.ReactNode }> = ({ children }) =
                   <p className="text-sm font-medium text-gray-700">Privacy Mode</p>
                   <p className="text-xs text-gray-500">Maximum Protection</p>
                 </div>
+              </div>
+              <div className="mt-3">
+                <NetworkStatusIndicator className="w-full" />
               </div>
             </div>
           </div>

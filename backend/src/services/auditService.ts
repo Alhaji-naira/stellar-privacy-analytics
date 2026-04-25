@@ -7,7 +7,7 @@ import { EventEmitter } from 'events';
 export interface AuditRecord {
   id: string;
   timestamp: Date;
-  category: 'key_management' | 'access_control' | 'system_event' | 'security_violation' | 'privacy_query';
+  category: 'key_management' | 'access_control' | 'system_event' | 'security_violation' | 'privacy_query' | 'data_access' | 'data_modification';
   action: string;
   actor: {
     userId?: string;

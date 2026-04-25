@@ -1,7 +1,7 @@
-import { Server, xdr, rpc } from 'stellar-sdk';
-import Redis from 'redis';
-import axios from 'axios';
+import { Server, xdr, rpc } from '@stellar/stellar-sdk';
 import { logger } from '../utils/logger';
+import { getRedisClient, connectRedis } from '../utils/redis';
+import axios from 'axios';
 
 // Types
 interface PermissionEvent {
@@ -13,7 +13,7 @@ interface PermissionEvent {
 }
 
 export class StellarTransactionWatcher {
-  private rpcServer: Server; // Users says Horizon, but Soroban events are via RPC in modern SDK
+  private rpcServer: Server; 
   private redisClient: any;
   private cursorKey = 'stellar:watcher:cursor';
   private permissionCacheKey = 'permissions:dataset:';
@@ -28,7 +28,8 @@ export class StellarTransactionWatcher {
     private webhookUrls: string[] = []
   ) {
     this.rpcServer = new Server(rpcUrl);
-    this.redisClient = Redis.createClient({ url: redisUrl });
+    // Use the central Redis client
+    this.redisClient = getRedisClient();
   }
 
   async start() {
@@ -36,9 +37,8 @@ export class StellarTransactionWatcher {
     this.isRunning = true;
     
     try {
-      if (!this.redisClient.isOpen) {
-        await this.redisClient.connect();
-      }
+      // Connect specifically for this watcher if not already connected
+      await connectRedis();
       logger.info('Stellar Transaction Watcher started', { contractId: this.contractId });
       this.watchEvents();
     } catch (error) {
@@ -138,7 +138,7 @@ export class StellarTransactionWatcher {
     for (const url of this.webhookUrls) {
       try {
         await axios.post(url, payload, { timeout: 5000 });
-      } catch (error) {
+      } catch (error: any) {
         logger.warn('Failed to emit webhook', { url, error: error.message });
       }
     }
